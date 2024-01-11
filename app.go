@@ -12,6 +12,7 @@ var twitch = MakeTwitchApi()
 func main() {
 	done := make(chan bool)
 	ticker := time.NewTicker(time.Second * 5)
+	defer finally()
 
 	go func() {
 		for {
@@ -27,7 +28,7 @@ func main() {
 		}
 	}()
 
-	tick()
+	//tick()
 	// run for 15 seconds
 	// time.Sleep(15 * time.Second)
 	done <- true
@@ -40,4 +41,9 @@ func tick() {
 	fmt.Println(string(jayson))
 
 	clips[0].DownloadClip()
+}
+
+func finally() {
+	videoUtils := VideoUtils{}
+	videoUtils.AddWatermark()
 }
