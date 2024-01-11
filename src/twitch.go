@@ -3,6 +3,7 @@ package src
 import (
 	"cmp"
 	"encoding/json"
+	"github.com/flytam/filenamify"
 	"github.com/spf13/viper"
 	"io"
 	"log"
@@ -115,7 +116,17 @@ func (twitch *TwitchApi) GetClips() []TwitchClip {
 			return cmp.Compare(b.ViewCount, a.ViewCount)
 		})
 
-	return resBody.Data[:5]
+	filteredClips := func() []TwitchClip {
+		var filtered []TwitchClip
+		for _, clip := range resBody.Data[:25] {
+			if clip.Duration <= 20 {
+				filtered = append(filtered, clip)
+			}
+		}
+		return filtered
+	}()
+
+	return filteredClips
 }
 
 func (clip *TwitchClip) DownloadClip() {
@@ -131,7 +142,10 @@ func (clip *TwitchClip) DownloadClip() {
 		log.Fatal(err)
 	}
 
-	err = os.WriteFile("clip.mp4", body, 0644)
+	clipTitle, _ := filenamify.Filenamify(clip.Title, filenamify.Options{})
+	clipTitle = strings.ReplaceAll(clipTitle, " ", "_")
+
+	err = os.WriteFile("assets/.private/out/clip_"+clipTitle+".mp4", body, 0644)
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -10,15 +10,22 @@ type VideoUtils struct {
 }
 
 func (vu VideoUtils) AddWatermark() {
-	// show watermark with size 64:-1 in the top left corner after seconds 1
-	overlay := ffmpeg.Input("./assets/rocket_1f680.png").Filter("scale", ffmpeg.Args{"128:-1"})
+	overlay := ffmpeg.Input("./assets/logo_wm.png").Filter("scale", ffmpeg.Args{"-1:48"})
 	err := ffmpeg.Filter(
 		[]*ffmpeg.Stream{
-			ffmpeg.Input("./assets/clip.mp4"),
+			ffmpeg.Input("./assets/.private/clip.mp4"),
 			overlay,
-		}, "overlay", ffmpeg.Args{"10:10"}).
-		Output("./assets/watermark.mp4", ffmpeg.KwArgs{"map": "0:a"}, ffmpeg.KwArgs{"t": 5}).OverWriteOutput().ErrorToStdOut().Run()
+		}, "overlay", ffmpeg.Args{"(abs(main_h/2)-overlay_w-10):(main_h-overlay_h-10)"}).
+		Filter("crop", ffmpeg.Args{"abs(ih/2):ih:0:0"}).
+		Output("./assets/.private/watermark.mp4",
+			ffmpeg.KwArgs{"map": "0:a"},
+			ffmpeg.KwArgs{"t": 7}).
+		OverWriteOutput().ErrorToStdOut().Run()
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+func (vu VideoUtils) OpenCV() {
+
 }

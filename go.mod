@@ -4,6 +4,7 @@ go 1.21
 
 require (
 	github.com/aws/aws-sdk-go v1.38.20 // indirect
+	github.com/flytam/filenamify v1.2.0 // indirect
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect

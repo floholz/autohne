@@ -8,8 +8,29 @@ import (
 )
 
 var twitch = MakeTwitchApi()
+var videoUtils = VideoUtils{}
 
 func main() {
+	// run()
+	// tick()
+	videoUtils.AddWatermark()
+}
+
+func tick() {
+	clips := twitch.GetClips()
+
+	jayson, _ := json.MarshalIndent(clips, "", "  ")
+	fmt.Println(string(jayson))
+
+	for _, clip := range clips {
+		clip.DownloadClip()
+	}
+}
+
+func finally() {
+}
+
+func run() {
 	done := make(chan bool)
 	ticker := time.NewTicker(time.Second * 5)
 	defer finally()
@@ -28,22 +49,8 @@ func main() {
 		}
 	}()
 
-	//tick()
+	tick()
 	// run for 15 seconds
-	// time.Sleep(15 * time.Second)
+	time.Sleep(15 * time.Second)
 	done <- true
-}
-
-func tick() {
-	clips := twitch.GetClips()
-
-	jayson, _ := json.MarshalIndent(clips, "", "  ")
-	fmt.Println(string(jayson))
-
-	clips[0].DownloadClip()
-}
-
-func finally() {
-	videoUtils := VideoUtils{}
-	videoUtils.AddWatermark()
 }
