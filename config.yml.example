@@ -1,0 +1,5 @@
+streamer:
+  broadcaster_id: <id_of_the_streamer>
+me:
+  bearer_token: <your_oauth2_token>
+  client_id: <your_client_id>
