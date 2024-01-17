@@ -4,6 +4,8 @@ import (
 	. "autohne/src"
 	"encoding/json"
 	"fmt"
+	"log"
+	"os"
 	"time"
 )
 
@@ -13,7 +15,17 @@ var videoUtils = VideoUtils{}
 func main() {
 	// run()
 	// tick()
-	videoUtils.AddWatermark()
+	// videoUtils.AddWatermark()
+
+	file, err := os.ReadFile("./assets/.private/clip.mp4")
+	if err != nil {
+		log.Fatal(err)
+	}
+	nfile := videoUtils.CreateShort(file)
+	err = os.WriteFile("assets/.private/clip2.mp4", nfile, 0644)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 func tick() {
