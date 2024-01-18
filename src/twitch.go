@@ -145,7 +145,7 @@ func (clip *TwitchClip) DownloadClip() {
 	clipTitle, _ := filenamify.Filenamify(clip.Title, filenamify.Options{})
 	clipTitle = strings.ReplaceAll(clipTitle, " ", "_")
 
-	err = os.WriteFile("assets/.private/out/clip_"+clipTitle+".mp4", body, 0644)
+	err = os.WriteFile("assets/.ignore/out/clip_"+clipTitle+".mp4", body, 0644)
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -17,7 +17,7 @@ func main() {
 	// tick()
 	// videoUtils.AddWatermark()
 
-	file, err := os.ReadFile("./assets/.private/clip.mp4")
+	file, err := os.ReadFile("./assets/.ignore/clip.mp4")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -25,7 +25,7 @@ func main() {
 	// short := videoUtils.CreateShort(file)
 	short := videoUtils.CreateShortFromFullVid(file)
 
-	err = os.WriteFile("assets/.private/clip2.mp4", short, 0644)
+	err = os.WriteFile("assets/.ignore/clip2.mp4", short, 0644)
 	if err != nil {
 		log.Fatal(err)
 	}
