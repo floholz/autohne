@@ -10,7 +10,7 @@ import (
 )
 
 var twitch = MakeTwitchApi()
-var videoUtils = VideoUtils{}
+var videoUtils = NewVideoUtils(true)
 
 func main() {
 	// run()
@@ -21,8 +21,11 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	nfile := videoUtils.CreateShort(file)
-	err = os.WriteFile("assets/.private/clip2.mp4", nfile, 0644)
+
+	// short := videoUtils.CreateShort(file)
+	short := videoUtils.CreateShortFromFullVid(file)
+
+	err = os.WriteFile("assets/.private/clip2.mp4", short, 0644)
 	if err != nil {
 		log.Fatal(err)
 	}
