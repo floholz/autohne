@@ -11,13 +11,32 @@ import (
 
 var twitch = MakeTwitchApi()
 var videoUtils = NewVideoUtils(true)
+var youtube = YoutubeApi{}
 
 func main() {
-	// run()
-	// tick()
-	// videoUtils.AddWatermark()
+	//downloadClips()
+	//createShort()
+	//uploadShort()
+}
 
-	file, err := os.ReadFile("./assets/.ignore/clip.mp4")
+func uploadShort() {
+	file, err := os.ReadFile("./assets/.ignore/short.mp4")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	videoData := NewYoutubeVideData(
+		"Souvenir Dragon Lore owner btw #ohnepixel",
+		"Clip from ohnepixel stream",
+		"20",
+		"ohnepixel, clip, twitch, stream, highlight",
+		"public",
+	)
+	youtube.UploadVideo(file, videoData)
+}
+
+func createShort() {
+	file, err := os.ReadFile("./assets/.ignore/out/clip_souvenir_dragonlore_owner_btw_.mp4")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -25,13 +44,13 @@ func main() {
 	// short := videoUtils.CreateShort(file)
 	short := videoUtils.CreateShortFromFullVid(file)
 
-	err = os.WriteFile("assets/.ignore/clip2.mp4", short, 0644)
+	err = os.WriteFile("assets/.ignore/short.mp4", short, 0644)
 	if err != nil {
 		log.Fatal(err)
 	}
 }
 
-func tick() {
+func downloadClips() {
 	clips := twitch.GetClips()
 
 	jayson, _ := json.MarshalIndent(clips, "", "  ")
@@ -40,9 +59,6 @@ func tick() {
 	for _, clip := range clips {
 		clip.DownloadClip()
 	}
-}
-
-func finally() {
 }
 
 func run() {
@@ -68,4 +84,9 @@ func run() {
 	// run for 15 seconds
 	time.Sleep(15 * time.Second)
 	done <- true
+}
+func tick() {
+
+}
+func finally() {
 }

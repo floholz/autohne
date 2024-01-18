@@ -53,7 +53,7 @@ func (vu VideoUtils) CreateShort(file []byte) []byte {
 func (vu VideoUtils) CreateShortFromFullVid(file []byte) []byte {
 	inBuf := bytes.NewBuffer(file)
 	outBuf := bytes.NewBuffer(nil)
-	og := ffmpeg.Input("pipe:").Filter("scale", ffmpeg.Args{"-1:1080"})
+	og := ffmpeg.Input("pipe:").Filter("scale", ffmpeg.Args{"-1:1920"})
 
 	split := og.Split()
 	split0, split1 := split.Get("0"), split.Get("1")
@@ -61,9 +61,9 @@ func (vu VideoUtils) CreateShortFromFullVid(file []byte) []byte {
 	split0 = cropForShort(split0).Filter("boxblur", ffmpeg.Args{"50:5"})
 	split1 = split1.Filter("crop", ffmpeg.Args{"abs(iw/2):ih:abs(iw/4):abs(ih/2)"})
 
-	out := overlayStream(split0, split1, "540:-1", "0:abs(main_h/2-overlay_h/2)")
-	out = overlayFile(out, "assets/ohnepixel-clipper-mark.png", "500:-1", "25:25", 1.0)
-	out = overlayFile(out, "assets/logo_wm.png", "-1:48", "(abs(main_h/2)-overlay_w-10):(main_h-overlay_h-10)", 0.2)
+	out := overlayStream(split0, split1, "1080:-1", "0:abs(main_h/2-overlay_h/2)")
+	out = overlayFile(out, "assets/ohnepixel-clipper-mark.png", "720:-1", "abs(main_w/2-overlay_w/2):64", 1.0)
+	out = overlayFile(out, "assets/logo_wm.png", "-1:64", "(abs(main_w)-overlay_w-24):(main_h-overlay_h-24)", 0.2)
 
 	out = out.Output("pipe:", ffmpeg.KwArgs{"format": "mp4", "movflags": "isml+frag_keyframe", "map": "0:a"}).
 		WithOutput(outBuf).
@@ -86,11 +86,7 @@ func (vu VideoUtils) CreateShortFromFullVid(file []byte) []byte {
 }
 
 func cropForShort(stream *ffmpeg.Stream) *ffmpeg.Stream {
-	w := "abs(ih/2)"
-	h := "ih"
-	x := "abs(iw/2-ih/2)"
-	y := "0"
-	return stream.Filter("crop", ffmpeg.Args{fmt.Sprintf("%s:%s:%s:%s", w, h, x, y)})
+	return stream.Filter("crop", ffmpeg.Args{"1080:ih:abs(iw/2-540):0"})
 }
 
 func overlayStream(stream1 *ffmpeg.Stream, stream2 *ffmpeg.Stream, scale string, position string) *ffmpeg.Stream {
