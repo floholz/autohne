@@ -4,9 +4,9 @@ import (
 	. "autohne/src"
 	"encoding/json"
 	"fmt"
+	"github.com/spf13/pflag"
 	"log"
 	"os"
-	"time"
 )
 
 var twitch = MakeTwitchApi()
@@ -14,16 +14,46 @@ var videoUtils = NewVideoUtils(true)
 var youtube = YoutubeApi{}
 
 func main() {
-	//downloadClips()
-	//createShort()
-	//uploadShort()
+	var youtubeEnabled bool
+	pflag.BoolVarP(&youtubeEnabled, "youtube", "y", false, "Use YouTube")
+	var tiktokEnabled bool
+	pflag.BoolVarP(&tiktokEnabled, "tiktok", "t", false, "Use TikTok")
+	var instagramEnabled bool
+	pflag.BoolVarP(&instagramEnabled, "instagram", "i", false, "Use Instagram")
+	pflag.Parse()
+
+	command := pflag.Arg(0)
+
+	switch command {
+	case "download":
+		downloadClips()
+	case "create":
+		createShort()
+	case "upload":
+		uploadShort(youtubeEnabled, tiktokEnabled, instagramEnabled)
+	}
 }
 
-func uploadShort() {
+func uploadShort(yt bool, tt bool, ig bool) {
+	fmt.Printf("Upload to:\n\tYouTube: %t\n\tTikTok: %t\n\tInstagram: %t\n", yt, tt, ig)
+
 	file, err := os.ReadFile("./assets/.ignore/short.mp4")
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	if yt {
+		uploadToYouTube(file)
+	}
+	if tt {
+		// do TikTok stuff
+	}
+	if ig {
+		// do Instagram stuff
+	}
+}
+
+func uploadToYouTube(file []byte) {
 
 	videoData := NewYoutubeVideData(
 		"Souvenir Dragon Lore owner btw #ohnepixel",
@@ -59,34 +89,4 @@ func downloadClips() {
 	for _, clip := range clips {
 		clip.DownloadClip()
 	}
-}
-
-func run() {
-	done := make(chan bool)
-	ticker := time.NewTicker(time.Second * 5)
-	defer finally()
-
-	go func() {
-		for {
-			select {
-			case <-done:
-				fmt.Println("Done !!")
-				ticker.Stop()
-				return
-			case <-ticker.C:
-				fmt.Printf("%s | still alive!\n", time.Now().Format(time.RFC3339))
-				tick()
-			}
-		}
-	}()
-
-	tick()
-	// run for 15 seconds
-	time.Sleep(15 * time.Second)
-	done <- true
-}
-func tick() {
-
-}
-func finally() {
 }

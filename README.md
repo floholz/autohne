@@ -4,7 +4,7 @@
 [![GitHub go.mod Go version (subdirectory of monorepo)](https://img.shields.io/github/go-mod/go-version/floholz/autohne?logo=go&labelColor=gray&label=%20)](https://go.dev/dl/)
 
 
-> This is a bot to automatically create short-format videos from the latest clips of a streamer.
+> This is a tool to gather the latest clips of a streamer and create short-format videos from it.
 
 # ‼️ WIP ![](https://geps.dev/progress/40)
 
