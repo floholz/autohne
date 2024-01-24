@@ -1,5 +1,11 @@
-streamer:
-  broadcaster_id: <id_of_the_streamer>
-me:
-  bearer_token: <your_oauth2_token>
-  client_id: <your_client_id>
+download:
+  twitch:
+    broadcaster_id: <twitch_id_of_the_streamer>
+    client_id: <your_twitch_client_id>
+    bearer_token: <your_twitch_oauth2_token>
+upload:
+  youtube:
+    client_id: <your_youtube_client_id>
+    client_secret: <your_youtube_client_secret>
+  tiktok:
+  instagram:

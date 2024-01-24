@@ -1,5 +1,3 @@
 config.yml
-client_secrets.json
-*.mp4
 /.idea
 /assets/.ignore

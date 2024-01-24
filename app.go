@@ -9,9 +9,11 @@ import (
 	"os"
 )
 
-var twitch = MakeTwitchApi()
+var appConfig = NewAppConfig()
+
+var twitch = NewTwitchApi(appConfig.Download.TwitchConfig)
 var videoUtils = NewVideoUtils(true)
-var youtube = YoutubeApi{}
+var youtube = NewYoutubeApi(appConfig.Upload.YoutubeConfig)
 
 func main() {
 	var cmdDownload bool

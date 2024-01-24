@@ -14,11 +14,18 @@ import (
 
 	"golang.org/x/net/context"
 	"golang.org/x/oauth2"
-	"golang.org/x/oauth2/google"
 	"google.golang.org/api/youtube/v3"
 )
 
+var Config YoutubeConfig
+
 type YoutubeApi struct {
+}
+
+func NewYoutubeApi(config YoutubeConfig) YoutubeApi {
+	ytApi := YoutubeApi{}
+	Config = config
+	return ytApi
 }
 
 type YoutubeVideoData struct {
@@ -79,23 +86,41 @@ func (yt *YoutubeApi) UploadVideo(video []byte, videoData YoutubeVideoData) {
 func getClient(scope string) *http.Client {
 	ctx := context.Background()
 
-	b, err := os.ReadFile("client_secrets.json")
-	if err != nil {
-		log.Fatalf("Unable to read client secret file: %v", err)
-	}
-
-	// If modifying the scope, delete your previously saved credentials
-	// at ~/.credentials/youtube-go.json
-	config, err := google.ConfigFromJSON(b, scope)
-	if err != nil {
-		log.Fatalf("Unable to parse client secret file to config: %v", err)
-	}
-
-	// Use a redirect URI like this for a web app. The redirect URI must be a
-	// valid one for your OAuth2 credentials.
-	config.RedirectURL = "http://localhost:8090"
-	// Use the following redirect URI if launchWebServer=false in oauth2.go
+	// b, err := os.ReadFile("client_secrets.json")
+	// if err != nil {
+	// 	log.Fatalf("Unable to read client secret file: %v", err)
+	// }
+	//
+	// // If modifying the scope, delete your previously saved credentials
+	// // at ~/.credentials/youtube-go.json
+	// //config, err := google.ConfigFromJSON(b, scope)
+	// if err != nil {
+	// 	log.Fatalf("Unable to parse client secret file to config: %v", err)
+	// }
+	//
+	// // Use a redirect URI like this for a web app. The redirect URI must be a
+	// // valid one for your OAuth2 credentials.
+	// // config.RedirectURL = "http://localhost:8090"
+	// // Use the following redirect URI if launchWebServer=false in oauth2.go
 	// config.RedirectURL = "urn:ietf:wg:oauth:2.0:oob"
+
+	if Config.ClientId == "" {
+		log.Fatalf("'upload.youtube.client_id' is not set in config")
+	}
+	if Config.ClientSecret == "" {
+		log.Fatalf("'upload.youtube.client_secret' is not set in config")
+	}
+
+	config := &oauth2.Config{
+		ClientID:     Config.ClientId,
+		ClientSecret: Config.ClientSecret,
+		RedirectURL:  "urn:ietf:wg:oauth:2.0:oob",
+		Scopes:       []string{scope},
+		Endpoint: oauth2.Endpoint{
+			AuthURL:  "https://accounts.google.com/o/oauth2/auth",
+			TokenURL: "https://oauth2.googleapis.com/token",
+		},
+	}
 
 	cacheFile, err := tokenCacheFile()
 	if err != nil {

@@ -4,7 +4,6 @@ import (
 	"cmp"
 	"encoding/json"
 	"github.com/flytam/filenamify"
-	"github.com/spf13/viper"
 	"io"
 	"log"
 	"net/http"
@@ -41,43 +40,21 @@ type GetClipsResponse struct {
 	} `json:"pagination"`
 }
 
-type TwitchConfig struct {
-	Streamer struct {
-		BroadcasterId string `mapstructure:"broadcaster_id"`
-	} `yaml:"streamer"`
-	Me struct {
-		BearerToken string `mapstructure:"bearer_token"`
-		ClientId    string `mapstructure:"client_id"`
-	} `yaml:"me"`
-}
-
 type TwitchApi struct {
 	BaseUrl string
 	Config  TwitchConfig
 }
 
-func MakeTwitchApi() TwitchApi {
+func NewTwitchApi(config TwitchConfig) TwitchApi {
 	twitch := TwitchApi{}
-	// read config
-	viper.SetConfigName("config")
-	viper.SetConfigType("yaml")
-	viper.AddConfigPath(".")
-	err := viper.ReadInConfig()
-	if err != nil {
-		log.Fatal(err)
-	}
-	err = viper.Unmarshal(&twitch.Config)
-	if err != nil {
-		log.Fatal(err)
-	}
-	// set defaults
 	twitch.BaseUrl = "https://api.twitch.tv/helix"
+	twitch.Config = config
 	return twitch
 }
 
 func (twitch *TwitchApi) GetClips() []TwitchClip {
 	query := "?" + strings.Join([]string{
-		"broadcaster_id=" + twitch.Config.Streamer.BroadcasterId,
+		"broadcaster_id=" + twitch.Config.BroadcasterId,
 		"started_at=" + time.Now().Add(-24*time.Hour).Truncate(24*time.Hour).UTC().Format(time.RFC3339),
 		"first=100",
 	}, "&")
@@ -87,8 +64,8 @@ func (twitch *TwitchApi) GetClips() []TwitchClip {
 		log.Fatal(err)
 	}
 
-	req.Header.Set("Authorization", "Bearer "+twitch.Config.Me.BearerToken)
-	req.Header.Set("Client-Id", twitch.Config.Me.ClientId)
+	req.Header.Set("Authorization", "Bearer "+twitch.Config.BearerToken)
+	req.Header.Set("Client-Id", twitch.Config.ClientId)
 
 	client := http.Client{
 		Timeout: 30 * time.Second,
