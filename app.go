@@ -14,23 +14,46 @@ var videoUtils = NewVideoUtils(true)
 var youtube = YoutubeApi{}
 
 func main() {
+	var cmdDownload bool
+	pflag.BoolVarP(&cmdDownload, "download", "d", false, "Download newest clips")
+	var cmdCreate bool
+	pflag.BoolVarP(&cmdCreate, "create", "c", false, "Create short format videos from clips")
+	var cmdUpload bool
+	pflag.BoolVarP(&cmdUpload, "upload", "u", false, "Upload video to the specified platforms")
+
 	var youtubeEnabled bool
-	pflag.BoolVarP(&youtubeEnabled, "youtube", "y", false, "Use YouTube")
+	pflag.BoolVarP(&youtubeEnabled, "Youtube", "Y", false, "Use YouTube")
 	var tiktokEnabled bool
-	pflag.BoolVarP(&tiktokEnabled, "tiktok", "t", false, "Use TikTok")
+	pflag.BoolVarP(&tiktokEnabled, "Tiktok", "T", false, "Use TikTok")
 	var instagramEnabled bool
-	pflag.BoolVarP(&instagramEnabled, "instagram", "i", false, "Use Instagram")
+	pflag.BoolVarP(&instagramEnabled, "Instagram", "I", false, "Use Instagram")
+
+	var debug bool
+	pflag.BoolVar(&debug, "debug", false, "Debug mode")
+	var help bool
+	pflag.BoolVarP(&help, "help", "h", false, "Display command options and flags")
+
 	pflag.Parse()
 
-	command := pflag.Arg(0)
+	if help {
+		pflag.CommandLine.SortFlags = false
+		pflag.PrintDefaults()
+		os.Exit(0)
+	}
 
-	switch command {
-	case "download":
+	if cmdDownload {
 		downloadClips()
-	case "create":
+	}
+	if cmdCreate {
 		createShort()
-	case "upload":
+	}
+	if cmdUpload {
 		uploadShort(youtubeEnabled, tiktokEnabled, instagramEnabled)
+	} else {
+		if youtubeEnabled || tiktokEnabled || instagramEnabled {
+			err := fmt.Errorf("'-Y', '-T' and '-I' do only work in combination with '-u'")
+			fmt.Println(err.Error())
+		}
 	}
 }
 
