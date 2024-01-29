@@ -1,0 +1,25 @@
+version: "3"
+
+services:
+  goclean:
+    container_name: "goclean"
+    image: floholz/goclean:1
+    env_file:
+      - .env
+    volumes:
+      - ${MY_APP_CONTEXT}/videos/:${GO_CLEAN_PATHS}
+    networks:
+      - autohne_net
+
+  autohne:
+    container_name: "autohne"
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ${MY_APP_CONTEXT}:${AUTOHNE_APP_CONTEXT}
+    networks:
+      - autohne_net
+
+networks:
+  autohne_net:

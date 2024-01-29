@@ -2,20 +2,23 @@ package main
 
 import (
 	. "autohne/src"
-	"encoding/json"
 	"fmt"
 	"github.com/spf13/pflag"
 	"log"
 	"os"
 )
 
-var appConfig = NewAppConfig()
-
-var twitch = NewTwitchApi(appConfig.Download.TwitchConfig)
-var videoUtils = NewVideoUtils(true)
-var youtube = NewYoutubeApi(appConfig.Upload.YoutubeConfig)
+var appConfig AppConfig
+var twitch TwitchApi
+var videoUtils VideoUtils
+var youtube YoutubeApi
 
 func main() {
+	appConfig = NewAppConfig()
+	twitch = NewTwitchApi(appConfig.Download.TwitchConfig)
+	videoUtils = NewVideoUtils(true)
+	youtube = NewYoutubeApi(appConfig.Upload.YoutubeConfig)
+
 	var cmdDownload bool
 	pflag.BoolVarP(&cmdDownload, "download", "d", false, "Download newest clips")
 	var cmdCreate bool
@@ -79,37 +82,28 @@ func uploadShort(yt bool, tt bool, ig bool) {
 }
 
 func uploadToYouTube(file []byte) {
-
 	videoData := NewYoutubeVideData(
 		"Souvenir Dragon Lore owner btw #ohnepixel",
 		"Clip from ohnepixel stream",
 		"20",
 		"ohnepixel, clip, twitch, stream, highlight",
-		"public",
+		"private",
 	)
 	youtube.UploadVideo(file, videoData)
 }
 
 func createShort() {
-	file, err := os.ReadFile("./assets/.ignore/out/clip_souvenir_dragonlore_owner_btw_.mp4")
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// short := videoUtils.CreateShort(file)
+	file := ReadFromDisk("@videos/clips/@first.mp4")
 	short := videoUtils.CreateShortFromFullVid(file)
-
-	err = os.WriteFile("assets/.ignore/short.mp4", short, 0644)
-	if err != nil {
-		log.Fatal(err)
-	}
+	SaveToDisk(short, "@videos/shorts/@random.mp4")
 }
 
 func downloadClips() {
-	clips := twitch.GetClips()
+	clips := twitch.GetClips().
+		SortClips(TWITCH_CLIP_SORT_BY_VIEWS).
+		FilterClips(TwitchClipFilterOptions{MaxDuration: 25, Limit: 3})
 
-	jayson, _ := json.MarshalIndent(clips, "", "  ")
-	fmt.Println(string(jayson))
+	clips.SaveJson()
 
 	for _, clip := range clips {
 		clip.DownloadClip()

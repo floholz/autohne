@@ -3,15 +3,40 @@ package src
 import (
 	"cmp"
 	"encoding/json"
-	"github.com/flytam/filenamify"
 	"io"
 	"log"
 	"net/http"
-	"os"
 	"slices"
 	"strings"
 	"time"
 )
+
+type TwitchClipSortingStrategy uint
+
+const (
+	TWITCH_CLIP_SORT_BY_CREATED_AT TwitchClipSortingStrategy = 0
+	TWITCH_CLIP_SORT_BY_VIEWS                                = 1
+	TWITCH_CLIP_SORT_BY_DURATION                             = 2
+)
+
+type TwitchClipSortingDirection uint
+
+const (
+	DESC TwitchClipSortingDirection = 0
+	ASC                             = 1
+)
+
+type TwitchClipFilterOptions struct {
+	Limit         int
+	MaxDuration   float32
+	CreatedAfter  time.Time
+	CreatedBefore time.Time
+	GameId        string
+	Language      string
+	IncludesTitle string
+}
+
+type TwitchClipArray []TwitchClip
 
 type TwitchClip struct {
 	Id              string    `json:"id"`
@@ -34,7 +59,7 @@ type TwitchClip struct {
 }
 
 type GetClipsResponse struct {
-	Data       []TwitchClip `json:"data"`
+	Data       TwitchClipArray `json:"data"`
 	Pagination struct {
 		Cursor string `json:"cursor"`
 	} `json:"pagination"`
@@ -52,7 +77,7 @@ func NewTwitchApi(config TwitchConfig) TwitchApi {
 	return twitch
 }
 
-func (twitch *TwitchApi) GetClips() []TwitchClip {
+func (twitch *TwitchApi) GetClips() TwitchClipArray {
 	query := "?" + strings.Join([]string{
 		"broadcaster_id=" + twitch.Config.BroadcasterId,
 		"started_at=" + time.Now().Add(-24*time.Hour).Truncate(24*time.Hour).UTC().Format(time.RFC3339),
@@ -88,22 +113,60 @@ func (twitch *TwitchApi) GetClips() []TwitchClip {
 		log.Fatal(err)
 	}
 
-	slices.SortFunc(resBody.Data,
-		func(a, b TwitchClip) int {
+	return resBody.Data
+}
+
+func (clips TwitchClipArray) SortClips(sortingStrategy TwitchClipSortingStrategy, sortDirection ...TwitchClipSortingDirection) TwitchClipArray {
+	if len(sortDirection) == 0 {
+		sortDirection = []TwitchClipSortingDirection{DESC}
+	}
+	sorted := clips
+	slices.SortFunc(sorted, func(a, b TwitchClip) int {
+		result := 0
+		switch sortingStrategy {
+		case TWITCH_CLIP_SORT_BY_CREATED_AT:
+			return int(a.CreatedAt.Sub(b.CreatedAt).Nanoseconds())
+		case TWITCH_CLIP_SORT_BY_VIEWS:
 			return cmp.Compare(b.ViewCount, a.ViewCount)
-		})
-
-	filteredClips := func() []TwitchClip {
-		var filtered []TwitchClip
-		for _, clip := range resBody.Data[:25] {
-			if clip.Duration <= 20 {
-				filtered = append(filtered, clip)
-			}
+		case TWITCH_CLIP_SORT_BY_DURATION:
+			return cmp.Compare(b.Duration, a.Duration)
 		}
-		return filtered
-	}()
+		if sortDirection[0] == ASC {
+			result *= -1
+		}
+		return result
+	})
+	return sorted
+}
 
-	return filteredClips
+func (clips TwitchClipArray) FilterClips(options TwitchClipFilterOptions) TwitchClipArray {
+	var filtered TwitchClipArray
+	for _, clip := range clips {
+		if options.MaxDuration != 0 && options.MaxDuration <= clip.Duration {
+			continue
+		}
+		if !options.CreatedAfter.IsZero() && options.CreatedAfter.After(clip.CreatedAt) {
+			continue
+		}
+		if !options.CreatedBefore.IsZero() && options.CreatedBefore.Before(clip.CreatedAt) {
+			continue
+		}
+		if options.GameId != "" && options.GameId != clip.GameId {
+			continue
+		}
+		if options.Language != "" && options.Language != clip.Language {
+			continue
+		}
+		if !strings.Contains(clip.Title, options.IncludesTitle) {
+			continue
+		}
+		filtered = append(filtered, clip)
+
+		if options.Limit <= len(filtered) {
+			break
+		}
+	}
+	return filtered
 }
 
 func (clip *TwitchClip) DownloadClip() {
@@ -119,12 +182,20 @@ func (clip *TwitchClip) DownloadClip() {
 		log.Fatal(err)
 	}
 
-	clipTitle, _ := filenamify.Filenamify(clip.Title, filenamify.Options{})
-	clipTitle = strings.ReplaceAll(clipTitle, " ", "_")
+	clipTitle := Pathify(clip.Title)
+	SaveToDisk(body, "@videos/clips/"+clipTitle+".mp4")
+}
 
-	err = os.WriteFile("assets/.ignore/out/clip_"+clipTitle+".mp4", body, 0644)
-	if err != nil {
-		log.Fatal(err)
-	}
+func (clips TwitchClipArray) SaveJson() {
+	SaveToDisk([]byte(clips.String()), "@videos/clips/@random.json")
+}
 
+func (clips TwitchClipArray) String() string {
+	jayson, _ := json.MarshalIndent(clips, "", "  ")
+	return string(jayson)
+}
+
+func (clip *TwitchClip) String() string {
+	jayson, _ := json.MarshalIndent(clip, "", "  ")
+	return string(jayson)
 }

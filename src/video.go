@@ -59,7 +59,7 @@ func (vu VideoUtils) CreateShortFromFullVid(file []byte) []byte {
 	split0, split1 := split.Get("0"), split.Get("1")
 
 	split0 = cropForShort(split0).Filter("boxblur", ffmpeg.Args{"50:5"})
-	split1 = split1.Filter("crop", ffmpeg.Args{"abs(iw/2):ih:abs(iw/4):abs(ih/2)"})
+	split1 = cropAspectRatio(split1, "1", "1")
 
 	out := overlayStream(split0, split1, "1080:-1", "0:abs(main_h/2-overlay_h/2)")
 	out = overlayFile(out, "assets/ohnepixel-clipper-mark.png", "720:-1", "abs(main_w/2-overlay_w/2):64", 1.0)
@@ -87,6 +87,12 @@ func (vu VideoUtils) CreateShortFromFullVid(file []byte) []byte {
 
 func cropForShort(stream *ffmpeg.Stream) *ffmpeg.Stream {
 	return stream.Filter("crop", ffmpeg.Args{"1080:ih:abs(iw/2-540):0"})
+}
+
+func cropAspectRatio(stream *ffmpeg.Stream, w string, h string) *ffmpeg.Stream {
+	return stream.Filter("crop", ffmpeg.Args{
+		fmt.Sprintf("abs(iw/%s):abs(ih/%s):abs(iw/%s/2):abs(ih/%s/2)", w, h, w, h),
+	})
 }
 
 func overlayStream(stream1 *ffmpeg.Stream, stream2 *ffmpeg.Stream, scale string, position string) *ffmpeg.Stream {
