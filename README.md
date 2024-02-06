@@ -6,7 +6,7 @@
 
 > This is a tool to gather the latest clips of a streamer and create short-format videos from it.
 
-# ‼️ WIP ![](https://geps.dev/progress/40)
+# ‼️ WIP ![](https://geps.dev/progress/60)
 
 ---
 
